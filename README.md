@@ -2029,18 +2029,20 @@ local window = library:AddWindow("Test", {
 
 
 
-local killTab = window:CreateTab("Kill")
+local features = window:AddTab("Kill") -- Name of tab
+features:Show() -- shows the tab
 
 -- Add toggle to the Kill tab
 local autoKill = false
-killTab:CreateToggle("Auto Kill", false, function(state)
-    autoKill = state
+local switch = Kill:AddSwitch("Auto Kill", function(bool)
+	 autoKill = state
     if autoKill then
         enableAutoKill()
     else
         disableAutoKill()
     end
 end)
+switch:Set(true)
 
 -- Function to equip the "Punch" tool
 function equipTool(toolName)
