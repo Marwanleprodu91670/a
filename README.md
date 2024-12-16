@@ -9,3 +9,22 @@ local Window = Fluent:CreateWindow({
     Theme = "Dark",
     MinimizeKey = Enum.KeyCode.LeftControl -- Used when theres no MinimizeKeybind
 })
+
+--tabs
+local Tabs = {
+    Main = Window:AddTab({ Title = "Home", Icon = "Home" }),
+    Settings = Window:AddTab({ Title = "Auto Farm", Icon = "" })
+}
+
+Tabs.Home:AddParagraph({
+        Title = "DiscordParagraph",
+        Content = "Discord Server:"
+    })
+
+Tabs.Home:AddButton({
+    Title = "Copy Discord Server Link",
+    Description = "",
+    Callback = function()
+        setclipboard("https://discord.gg/QEy2hTHc")
+    end
+})
