@@ -49,9 +49,6 @@ local JumpPowerSlider = Tabs.Main:AddSlider("JumpPowerSlider", {
     end
 })
 
--- Auto Farm Toggles (Already defined above)
--- Skipping these as they are unchanged in the updated code
-
 -- Auto Kill Toggle
 local AutoKillToggle = Tabs.Killing:AddToggle("AutoKillToggle", {Title = "Auto Kill", Default = false })
 
@@ -86,12 +83,12 @@ local function EquipAndUseTool(toolName)
                 tool.Parent = character
             end
             -- Use the tool continuously by simulating a click
-            while true do
-                if character and character:FindFirstChild(toolName) then
+            spawn(function()
+                while character and character:FindFirstChild(toolName) do
                     tool:Activate()
+                    wait(0.1) -- Use a short wait to avoid too many activations per frame
                 end
-                wait(0.1) -- Use a short wait to avoid too many activations per frame
-            end
+            end)
         end
     end
 end
@@ -207,4 +204,3 @@ KillPlayerToggle:OnChanged(function(State)
         end)
     end
 end)
-
