@@ -1,4 +1,5 @@
-local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/ActualMasterOogway/Fluent-Renewed/main/Fluent%20Renewed.lua"))()
+local Library = loadstring(game:GetService("HttpService"):GetAsync("https://github.com/ActualMasterOogway/Fluent-Renewed/releases/latest/download/Fluent.luau", true))()
+
 local Window = library:CreateWindow("Slash Hub [Muscle Legends]")
 
 -- Main Tab
