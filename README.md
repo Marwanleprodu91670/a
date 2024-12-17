@@ -48,12 +48,15 @@ HomeTab:AddToggle({
         local player = game.Players.LocalPlayer
         local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
         if humanoid then
-            humanoid.Changed:Connect(function()
-                if humanoid:GetState() == Enum.HumanoidStateType.Physics then
-                    humanoid:ChangeState(Enum.HumanoidStateType.Seated)
+            while state do
+                if humanoid:GetState() == Enum.HumanoidStateType.Seated then
+                    humanoid:ChangeState(Enum.HumanoidStateType.Physics)
                 end
-            end)
-            humanoid.Jumping = state
+                if humanoid:GetState() ~= Enum.HumanoidStateType.Physics then
+                    humanoid:Move(Vector3.new(0, humanoid.JumpPower, 0)) -- Jumping action
+                end
+                wait(0.1)
+            end
         end
     end
 })
@@ -171,7 +174,7 @@ local function equipAndUsePunchTool()
     if character then
         local punchTool = character:FindFirstChild("Punch")
         if punchTool then
-            punchTool.Parent = character
+            -- Use the tool (if it's meant to be used this way)
             punchTool:Activate()
         end
     end
@@ -192,6 +195,7 @@ KillingTab:AddToggle({
 -- Update playersInServer when new players join or leave
 game.Players.PlayerAdded:Connect(function(player)
     table.insert(playersInServer, player.Name)
+    KillingTab:UpdateDropdownOptions("Select Player", playersInServer)  -- Update the dropdown dynamically
 end)
 
 game.Players.PlayerRemoving:Connect(function(player)
@@ -201,4 +205,5 @@ game.Players.PlayerRemoving:Connect(function(player)
             break
         end
     end
+    KillingTab:UpdateDropdownOptions("Select Player", playersInServer)  -- Update the dropdown dynamically
 end)
