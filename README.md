@@ -1,61 +1,204 @@
--- Load the Fluent library from GitHub
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
--- Create the main window (Slash Hub)
-local window = Fluent:Window({
-    Title = "Slash Hub",
-    Size = UDim2.new(0, 400, 0, 300),
-    Position = UDim2.new(0.5, -200, 0.5, -150),
-    Draggable = true,
-    Resizable = true
+local Window = Fluent:CreateWindow({
+    Title = "Slash Hub " .. Fluent.Version,
+    SubTitle = "",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = true, -- The blur may be detectable, setting this to false disables blur entirely
+    Theme = "Aqua",
+    MinimizeKey = Enum.KeyCode.LeftControl -- Used when there's no MinimizeKeybind
 })
 
--- Create a Home Tab
-local homeTab = Fluent:Tab({
-    Name = "Home",
-    Parent = window,
+-- Fluent provides Lucide Icons, they are optional
+local Tabs = {
+    Home = Window:AddTab({ Title = "Home", Icon = "" }),
+    AutoFarm = Window:AddTab({ Title = "AutoFarm", Icon = "" }),
+    Killing = Window:AddTab({ Title = "Killing", Icon = "" })
+}
+
+-- Home Tab Code (Same as before)
+local HomeTab = Tabs.Home
+local Section = HomeTab:AddSection("Local player:")
+
+HomeTab:AddSlider({
+    Title = "WalkSpeed",
+    Min = 16,
+    Max = 1000,
+    Default = 16,
+    Callback = function(value)
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = value
+    end
 })
 
--- Create a Label that says "Discord Server Link:"
-local discordLabel = Fluent:Label({
-    Text = "Discord Server Link:",
-    Parent = homeTab,
-    Position = UDim2.new(0.5, -100, 0.2, 0), -- Centers the label
-    Size = UDim2.new(0, 200, 0, 50),
+HomeTab:AddSlider({
+    Title = "JumpPower",
+    Min = 50,
+    Max = 1000,
+    Default = 50,
+    Callback = function(value)
+        game.Players.LocalPlayer.Character.Humanoid.JumpPower = value
+    end
 })
 
--- Function to copy the link to clipboard (Roblox does not have direct clipboard access, so we use a TextBox)
-local function copyLink()
-    local textBox = Instance.new("TextBox")
-    textBox.Text = "https://discord.gg/QEy2hTHc"
-    textBox.TextButton = true
-    textBox.Size = UDim2.new(0, 1, 0, 1)  -- Minimized so it's invisible
-    textBox.BackgroundTransparency = 1
-    textBox.Parent = game.CoreGui
+HomeTab:AddToggle({
+    Title = "Infinite Jumps",
+    Default = false,
+    Callback = function(state)
+        local player = game.Players.LocalPlayer
+        local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid.Changed:Connect(function()
+                if humanoid:GetState() == Enum.HumanoidStateType.Physics then
+                    humanoid:ChangeState(Enum.HumanoidStateType.Seated)
+                end
+            end)
+            humanoid.Jumping = state
+        end
+    end
+})
 
-    -- Focus the TextBox to copy to clipboard
-    textBox:CaptureFocus()
-    textBox.TextButton = true
-    game:GetService("GuiService"):SetCore("SendNotification", {
-        Title = "Success",
-        Text = "Link copied to clipboard!",
-        Duration = 2,
-    })
+-- Killing Tab Code
+local KillingTab = Tabs.Killing
 
-    -- After a short time, remove the textBox from CoreGui
-    delay(0.1, function()
-        textBox:Destroy()
-    end)
+local whitelistPlayer = nil
+local playersInServer = {}
+local allPlayers = game.Players:GetPlayers()
+
+-- Populate the list of players in the server
+for _, player in ipairs(allPlayers) do
+    table.insert(playersInServer, player.Name)
 end
 
--- Create the Copy Link Button
-local copyButton = Fluent:Button({
-    Text = "Copy Link",
-    Parent = homeTab,
-    Position = UDim2.new(0.5, -75, 0.4, 0), -- Centers the button
-    Size = UDim2.new(0, 150, 0, 50),
-    OnClick = copyLink,
+-- Whitelist Player Section
+local KillingSection1 = KillingTab:AddSection("Whitelist A Player")
+
+KillingTab:AddDropdown({
+    Title = "Select Player to Whitelist",
+    Options = playersInServer,
+    Default = "",
+    Callback = function(selectedPlayer)
+        whitelistPlayer = selectedPlayer
+    end
 })
 
--- Show the window
-window:Show()
+-- Auto Kill Section
+local KillingSection2 = KillingTab:AddSection("Kill Farming")
+
+local function teleportLegToRightHand(player)
+    local character = player.Character
+    if character and character:FindFirstChild("RightHand") then
+        local leg = character:FindFirstChild("LeftLeg") or character:FindFirstChild("RightLeg")
+        if leg then
+            leg.CFrame = game.Players.LocalPlayer.Character.RightHand.CFrame
+            leg.Transparency = 1
+        end
+    end
+end
+
+KillingTab:AddToggle({
+    Title = "Auto Kill",
+    Default = false,
+    Callback = function(state)
+        while state do
+            for _, player in ipairs(game.Players:GetPlayers()) do
+                if player.Name ~= whitelistPlayer then
+                    teleportLegToRightHand(player)
+                end
+            end
+            wait(0.1)  -- Adjust this delay as needed
+        end
+    end
+})
+
+-- Target Player Section
+local KillingSection3 = KillingTab:AddSection("Target Player")
+
+KillingTab:AddDropdown({
+    Title = "Select Player",
+    Options = playersInServer,
+    Default = "",
+    Callback = function(selectedPlayer)
+        targetPlayer = game.Players:FindFirstChild(selectedPlayer)
+    end
+})
+
+KillingTab:AddToggle({
+    Title = "Kill Players",
+    Default = false,
+    Callback = function(state)
+        while state do
+            if targetPlayer then
+                teleportLegToRightHand(targetPlayer)
+            end
+            wait(0.1)  -- Adjust this delay as needed
+        end
+    end
+})
+
+-- Spying Section
+local KillingSection4 = KillingTab:AddSection("Spying")
+
+local function spyOnPlayer(selectedPlayer)
+    local player = game.Players:FindFirstChild(selectedPlayer)
+    if player then
+        local camera = game.Workspace.CurrentCamera
+        camera.CameraSubject = player.Character.Humanoid
+        camera.CameraType = Enum.CameraType.Custom
+    end
+end
+
+KillingTab:AddToggle({
+    Title = "Spy on Player",
+    Default = false,
+    Callback = function(state)
+        while state do
+            if targetPlayer then
+                spyOnPlayer(targetPlayer.Name)
+            end
+            wait(0.1)  -- Adjust this delay as needed
+        end
+    end
+})
+
+-- Auto Punching Section (New)
+local AutoPunchSection = KillingTab:AddSection("Auto Punching")
+
+-- Function to equip and use the "Punch" tool
+local function equipAndUsePunchTool()
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+    if character then
+        local punchTool = character:FindFirstChild("Punch")
+        if punchTool then
+            punchTool.Parent = character
+            punchTool:Activate()
+        end
+    end
+end
+
+-- Auto Punch Toggle
+KillingTab:AddToggle({
+    Title = "Auto Punch",
+    Default = false,
+    Callback = function(state)
+        while state do
+            equipAndUsePunchTool()
+            wait(0.1)  -- Adjust this delay as needed
+        end
+    end
+})
+
+-- Update playersInServer when new players join or leave
+game.Players.PlayerAdded:Connect(function(player)
+    table.insert(playersInServer, player.Name)
+end)
+
+game.Players.PlayerRemoving:Connect(function(player)
+    for i, name in ipairs(playersInServer) do
+        if name == player.Name then
+            table.remove(playersInServer, i)
+            break
+        end
+    end
+end)
