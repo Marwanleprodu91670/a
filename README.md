@@ -44,7 +44,7 @@ syn.request(
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/memejames/elerium-v2-ui-library//main/Library", true))()
 
 
-local window = library:AddWindow("Adopt V2", {
+local window = library:AddWindow("Slash Hub V2 Free Version [Muscle Legends]", {
     main_color = Color3.fromRGB(128,128,128), -- Color
     min_size = Vector2.new(420, 440), -- Size of the gui
     can_resize = false, -- true or false
